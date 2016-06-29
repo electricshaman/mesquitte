@@ -16,6 +16,8 @@ defmodule Mesquitte.Mixfile do
   end
 
   defp deps do
-    []
+    [
+      {:ranch, "~> 1.2"}
+    ]
   end
 end
