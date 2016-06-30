@@ -14,8 +14,7 @@ defmodule Mesquitte.Decoding do
   def split_packets(<<>>, acc), do: Enum.reverse(acc)
   def split_packets(<<type::4, dup::1, qos::2, retain::1, rest::binary>>, acc) do
     {rem_len, rest} = decode_var_int(rest)
-    {:ok, type} = Packet.lookup(type)
-    header = %FixedHeader{type: type, dup: to_bool(dup), qos: qos, retain: to_bool(retain), rem_len: rem_len}
+    header = FixedHeader.new(type, dup, qos, retain, rem_len)
     packet = binary_part(rest, 0, rem_len)
 
     leftover_size = byte_size(rest) - rem_len
