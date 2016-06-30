@@ -2,6 +2,7 @@ defmodule Mesquitte.MqttProtocol do
   require Logger
 
   @behaviour :ranch_protocol
+  alias Mesquitte.Decoding
 
   def start_link(ref, socket, transport, opts) do
     :proc_lib.start_link(__MODULE__, :init, [ref, socket, transport, opts])
@@ -25,9 +26,10 @@ defmodule Mesquitte.MqttProtocol do
   @doc """
   Called when data is received on the socket.
   """
-  def handle_info({:tcp, socket, bin}, %{transport: transport} = state) do
-    transport.setopts(socket, [active: :once])
-    Logger.debug inspect state
+  def handle_info({:tcp, socket, bin}, state) do
+    state.transport.setopts(socket, [active: :once])
+    Logger.debug "State: #{inspect state}"
+    packets = Decoding.split_packets(bin)
     {:noreply, state}
   end
 
@@ -46,6 +48,9 @@ defmodule Mesquitte.MqttProtocol do
     {:noreply, state}
   end
 
+  @doc """
+  Called sometimes when the connection process is terminated
+  """
   def terminate(reason, state) do
     Logger.debug "Process terminated: #{inspect self()}, reason: #{reason}, state: #{inspect state}"
     :shutdown

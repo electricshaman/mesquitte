@@ -1,4 +1,8 @@
-defmodule Mesquitte.ControlPacket do
+defmodule Mesquitte.Packet do
+  defmacro __using__(_) do
+    quote do
+    end
+  end
 
   @types [connect: 1, connack: 2, publish: 3, puback: 4, pubrec: 5,
           pubrel: 6, pubcomp: 7, subscribe: 8, suback: 9, unsubscribe: 10,
@@ -16,4 +20,3 @@ defmodule Mesquitte.ControlPacket do
   defp result({name, _value}, 1), do: {:ok, name}
   defp result(nil, _position), do: {:error, :unknown_packet}
 end
-
