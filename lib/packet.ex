@@ -1,7 +1,12 @@
 defmodule Mesquitte.Packet do
   defmacro __using__(_) do
     quote do
-      alias Mesquitte.Packet.{Connect, ConnectFlags}
+      alias Mesquitte.Packet.{
+        FixedHeader,
+        Connect,
+        ConnectFlags,
+        PublishFlags,
+        ReservedFlags}
     end
   end
 
@@ -9,19 +14,22 @@ defmodule Mesquitte.Packet do
           pubrel: 6, pubcomp: 7, subscribe: 8, suback: 9, unsubscribe: 10,
           unsuback: 11, pingreq: 12, pingresp: 13, disconnect: 14]
 
-  def lookup(name) when is_atom(name),
-    do: lookup(name, 0)
-  def lookup(value) when is_integer(value),
-    do: lookup(value, 1)
-  def lookup(_other),
-    do: result(nil, nil)
+  def type_to_integer(name) when is_atom(name), do: lookup_type(name, 0)
+  def type_to_atom(value) when is_integer(value), do: lookup_type(value, 1)
 
-  defp lookup(input, position) do
-    List.keyfind(@types, input, position)
-    |> result(position)
+  defp lookup_type(input, position) do
+    {name, value} = List.keyfind(@types, input, position)
+    case position do
+      0 -> {:ok, value}
+      1 -> {:ok, name}
+      _ -> {:error, :unknown_packet}
+    end
   end
 
-  defp result({_name, value}, 0), do: {:ok, value}
-  defp result({name, _value}, 1), do: {:ok, name}
-  defp result(_other, _position), do: {:error, :unknown_packet}
+  def type_to_struct(name) when is_atom(name) do
+    case name do
+      :connect -> %Mesquitte.Packet.Connect{}
+      _ -> {:error, :unknown_packet}
+    end
+  end
 end
